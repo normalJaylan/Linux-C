@@ -50,11 +50,25 @@ void output_time(time_t time)							// time
 	printf(" %s ", buf);
 }
 
+int is_hidefile(char* filename)
+{
+    if (filename[0] == '.')
+    {
+        return 1;
+    }
+    else
+        return 0;
+}
+
 int main(int argc, char** argv)							// main
 {
 	DIR* dir;
 	struct dirent* ptr;
 	struct stat info;
+
+        char* dir_path;
+        char path[256] = {'\0'};
+        char temp_path[256] = {'\0'};
 
 	if (argc < 2)				// if user have not input a file
 	{
@@ -68,20 +82,29 @@ int main(int argc, char** argv)							// main
 		exit(EXIT_FAILURE);
 	}
 	
+        dir_path = argv[1];
+        strcat(path, dir_path);
+        strcat(path, "/");
+        strcpy(temp_path, path);
+     //   printf("%s\n\n", temp_path);
+
 	while ((ptr = readdir(dir)) != NULL)    // display
 	{
-		if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0)   // don't display hide file
-			continue;
-
-		stat(ptr->d_name, &info);							// get information of file
+                if (is_hidefile(ptr->d_name))                                   // not display hide files
+                    continue;
+                strcat(temp_path, ptr->d_name);
+        //        printf("%s\n\n", temp_path);
+		stat(temp_path, &info);							// get information of file
 		output_type(info.st_mode);         					 // output type
 		output_permission(info.st_mode);				   	// output permission	
 		printf("%d ", info.st_nlink);						// output number of hard link
 		output_owner(info.st_uid, info.st_gid);				// output owner				
 		printf("%d ", info.st_size);					// output size
 		output_time(info.st_mtime);                         // output time
-		printf("%s\n", ptr->d_name);						// output filename
-	}
+		printf(" %s\n", ptr->d_name);						// output filename
+	        
+                strcpy(temp_path, path);
+        }
 	
 	closedir(dir);
 	return 0;
